@@ -1,4 +1,4 @@
-const log = require('../../src/log.js')
+const log = require('./log.js')
 const Koa = require('koa')
 const app = new Koa()
 
@@ -25,7 +25,7 @@ app.use(koaBody({
 // auth
 const session = require('koa-session')
 app.keys = ['yet-to-set-a-better-secret']
-app.use(session({}, app))
+app.use(session(app))
 
 const auth = require('./auth')
 app.use(auth.passport.initialize())
@@ -34,14 +34,10 @@ app.use(auth.pub.routes())
 app.use(auth.guard)
 
 // response
-const fs = require('fs')
 const Router = require('koa-router')
 const router = new Router()
-router.get('/s/:id', async (ctx) => {
-  log.info(`get ${ctx.params.id}`)
-}).post('/s/vlog/data/:id', async (ctx) => {
-  let content = JSON.stringify(ctx.request.body)
-  log.info(`post ${ctx.params.id} : ${content}`)
+router.post('/s/', async (ctx) => {
+  ctx.body = 'hello'
 })
 app.use(router.routes())
 

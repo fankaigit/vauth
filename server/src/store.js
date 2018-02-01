@@ -1,4 +1,4 @@
-const log = require('../../src/log.js')
+const log = require('./log.js')
 
 const sqlite3 = require('sqlite3').verbose()
 const dbFile = 'data/db'

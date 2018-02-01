@@ -1,4 +1,4 @@
-const log = require('../../src/log.js')
+const log = require('./log.js')
 const userStore = require('./userStore')
 
 // koa passport
@@ -72,11 +72,11 @@ async function guard (ctx, next) {
 
 // password encrypt
 const bcrypt = require('bcrypt');
-function encrypt(input) {
+function encrypt (input) {
   return bcrypt.hashSync(input, 5); // salt 5 round
 }
 
-function check(input, hash) {
+function check (input, hash) {
   return bcrypt.compareSync(input, hash);
 }
 

@@ -1,4 +1,4 @@
-const log = require('../../src/log.js')
+const log = require('./log.js')
 const store = require('./store')
 const db = store.db
 const dbget = store.dbget

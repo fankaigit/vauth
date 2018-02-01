@@ -157,10 +157,10 @@ export default {
   },
   computed: {
     validUsername: function () {
-      return this.username.length === 0 || this.username.length > 6
+      return this.username.length === 0 || this.username.length >= 6
     },
     validPassword: function () {
-      return this.password.length === 0 || this.password.length > 6
+      return this.password.length === 0 || this.password.length >= 6
     }
   }
 }
