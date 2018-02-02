@@ -46,7 +46,7 @@ function dbrun (sql, data) {
 }
 
 module.exports = {
-  db: db,
-  dbget: dbget,
-  dbrun: dbrun
+  init: async (f) => { db.serialize(f) },
+  get: dbget,
+  run: dbrun
 }
