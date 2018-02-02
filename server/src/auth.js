@@ -3,18 +3,17 @@ const userStore = require('./userStore')
 
 // koa passport
 const passport = require('koa-passport')
+const NO_ERROR = null
 passport.serializeUser(function (user, done) {
-  log.info('serialize user:', user.id)
-  done(null, user.id)
+  done(NO_ERROR, user.id)
 })
 
 passport.deserializeUser(async function (id, done) {
-  log.info('deserialize user:', id)
   let user = await userStore.getUserById(id)
   if (user) {
-    done(null, { id: user.id, username: user.name })
+    done(NO_ERROR, { id: user.id, username: user.name })
   } else {
-    done(null, false)
+    done(NO_ERROR, false)
   }
 })
 
@@ -31,28 +30,36 @@ passport.use(new LocalStrategy(async function (username, password, done) {
 
 // auth router
 const Router = require('koa-router')
-const pub = new Router()
-pub.post('/s/logout', function (ctx) {
-  ctx.logout()
-  ctx.redirect('s/status')
-}).post('/s/login',
-  passport.authenticate('local', {
-    successRedirect: '/s/status',
-    failureRedirect: '/s/status'
-  })
-).post('/s/register', async (ctx) => {
-  log.info('register:', JSON.stringify(ctx.request.body))
+const unsafe = new Router()
+unsafe.post('/s/login',
+  passport.authenticate('local', { successRedirect: '/s/status' })
+).post('/s/logout', async (ctx) => {
+  await ctx.logout()
+  ctx.status = 401
+}).post('/s/register', async (ctx) => {
   let u = ctx.request.body
   u.id = Date.now()
   u.hash = encrypt(u.password)
-  let success = userStore.addUser(u)
+  let success = await userStore.addUser(u)
   if (success) {
+    log.info(`new user registered, uid=${u.id}, username=${u.username}`)
     ctx.login(u)
     ctx.redirect('/s/status')
   } else {
     ctx.throw(409)
   }
-}).get('/s/status', async (ctx) => {
+})
+
+async function verify (ctx, next) {
+  if (ctx.isAuthenticated()) {
+    await next()
+  } else {
+    ctx.throw(401)
+  }
+}
+
+const safe = new Router()
+safe.get('/s/status', async (ctx) => {
   if (ctx.isAuthenticated()) {
     let user = ctx.state.user
     ctx.body = {username: user.username, uid: user.id}
@@ -60,15 +67,6 @@ pub.post('/s/logout', function (ctx) {
     ctx.throw(401)
   }
 })
-
-async function guard (ctx, next) {
-  if (ctx.isAuthenticated()) {
-    await next()
-  } else {
-    ctx.body = {success: false}
-    ctx.throw(401)
-  }
-}
 
 // password encrypt
 const bcrypt = require('bcrypt');
@@ -80,8 +78,17 @@ function check (input, hash) {
   return bcrypt.compareSync(input, hash);
 }
 
+function guard (app) {
+  const session = require('koa-session')
+  app.keys = ['yet-to-set-a-better-secret']
+  app.use(session(app))
+  app.use(passport.initialize())
+  app.use(passport.session())
+  app.use(unsafe.routes())
+  app.use(verify)
+  app.use(safe.routes())
+}
+
 module.exports = {
-  pub: pub,
-  guard: guard,
-  passport: passport
+  guard
 }
