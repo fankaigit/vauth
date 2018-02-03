@@ -3,7 +3,7 @@
     <section id="hello-header" class="hero is-primary is-small">
       <div class="hero-body has-text-centered">
         <p class="title">Vauth</p>
-        <p class="subtitle">Demo for web auth</p>
+        <p class="subtitle">Demo for auth flow</p>
       </div>
     </section>
 
